@@ -1,18 +1,9 @@
 # Voice-to-Image Generation Pipeline Requirements
-
-# Core AI/ML libraries
 openvino-genai>=2025.0.0
-
-# Gradio for web interface
 gradio>=4.0.0
-
-# Audio processing
 librosa>=0.10.0
 soundfile>=0.12.0
-
-# Image processing
 Pillow>=10.0.0
-
-# Model downloading
 huggingface-hub>=0.20.0
+psutil
 

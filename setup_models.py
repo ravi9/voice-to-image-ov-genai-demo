@@ -307,50 +307,56 @@ Examples:
   # Full setup with default devices (Whisper: NPU, LLM & Image: GPU)
   python setup_models.py
   
-  # Setup with custom devices
+  # Setup with custom devices (using long form)
   python setup_models.py --whisper-device NPU --llm-device GPU --image-device GPU
+  
+  # Setup with custom devices (using shorthand)
+  python setup_models.py -w NPU -l GPU -i GPU
   
   # Download only (skip compilation)
   python setup_models.py --download-only
+  python setup_models.py -d
   
   # Compile only (skip download, assumes models already exist)
   python setup_models.py --compile-only
+  python setup_models.py -c
   
   # Compile only one image size
   python setup_models.py --single-size
+  python setup_models.py -s
         """
     )
     
     parser.add_argument(
-        "--whisper-device",
+        "--whisper-device", "-w",
         choices=["CPU", "GPU", "NPU"],
         default="NPU",
         help="Device for Whisper model (default: NPU)"
     )
     parser.add_argument(
-        "--llm-device",
+        "--llm-device", "-l",
         choices=["CPU", "GPU", "NPU"],
         default="GPU",
         help="Device for LLM model (default: GPU)"
     )
     parser.add_argument(
-        "--image-device",
+        "--image-device", "-i",
         choices=["CPU", "GPU", "NPU"],
         default="GPU",
         help="Device for Image Generation model (default: GPU)"
     )
     parser.add_argument(
-        "--download-only",
+        "--download-only", "-d",
         action="store_true",
         help="Only download models, skip compilation"
     )
     parser.add_argument(
-        "--compile-only",
+        "--compile-only", "-c",
         action="store_true",
         help="Only compile models, skip download"
     )
     parser.add_argument(
-        "--single-size",
+        "--single-size", "-s",
         action="store_true",
         help="Compile image pipeline for single size (1024x1024) instead of multiple sizes"
     )

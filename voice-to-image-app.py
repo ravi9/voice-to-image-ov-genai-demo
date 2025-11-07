@@ -6,7 +6,7 @@ Three-stage pipeline:
 2. Prompt Enhancement: LLaMA 3.2 3B Instruct (configurable device: CPU/GPU/NPU)
 3. Image Generation: LCM-SDXL (configurable device: CPU/GPU/NPU)
 
-IMPORTANT: Run 'python precompile_models.py' before first use!
+IMPORTANT: Run 'python setup_models.py' before first use!
 This pre-compiles models and creates cache to avoid long loading times
 and potential system crashes during interactive use.
 
@@ -70,46 +70,72 @@ def initialize_models(whisper_device, llm_device, image_device, img_width=1024, 
     global whisper_pipe, llm_pipe, image_pipe, image_pipe_compiled, current_image_config
     
     timing_info = {}
+    status_text = ""
     
     try:
         # Initialize Whisper for speech recognition
-        print(f"Loading Whisper model ({config.whisper_hf_id}) on {whisper_device}...")
-        whisper_config = {"CACHE_DIR": str(config.get_cache_dir(whisper_device))}
-        print(f"Using cache directory: {whisper_config['CACHE_DIR']}")
+        status_msg = f"Loading Whisper model ({config.whisper_hf_id}) on {whisper_device}...\n"
+        status_msg += f"Using cache directory: {config.get_cache_dir(whisper_device)}\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
+        whisper_config = {"CACHE_DIR": str(config.get_cache_dir(whisper_device))}
         whisper_start = time.time()
         whisper_pipe = ov_genai.WhisperPipeline(str(config.whisper_path), whisper_device, **whisper_config)  
         whisper_end = time.time()
         timing_info['whisper_load'] = whisper_end - whisper_start
-        print(f"Whisper loaded in {timing_info['whisper_load']:.2f} seconds")
+        
+        status_msg = f"✓ Whisper loaded in {timing_info['whisper_load']:.2f} seconds\n\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
         # Initialize LLM for prompt enhancement
-        print(f"Loading LLM model ({config.llm_hf_id}) on {llm_device}...")
-        llm_config = {"CACHE_DIR": str(config.get_cache_dir(llm_device))}
-        print(f"Using cache directory: {llm_config['CACHE_DIR']}")
+        status_msg = f"Loading LLM model ({config.llm_hf_id}) on {llm_device}...\n"
+        status_msg += f"Using cache directory: {config.get_cache_dir(llm_device)}\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
+        llm_config = {"CACHE_DIR": str(config.get_cache_dir(llm_device))}
         llm_start = time.time()
         llm_pipe = ov_genai.LLMPipeline(str(config.llm_path), llm_device, **llm_config)  
         llm_end = time.time()
         timing_info['llm_load'] = llm_end - llm_start
-        print(f"LLM loaded in {timing_info['llm_load']:.2f} seconds")
+        
+        status_msg = f"✓ LLM loaded in {timing_info['llm_load']:.2f} seconds\n\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
         # Initialize image generation pipeline with reshape and compile
-        print(f"Loading Image Generation model ({config.image_hf_id}) on {image_device}...")
-        print(f"Image dimensions: {img_width}x{img_height}")
+        status_msg = f"Loading Image Generation model ({config.image_hf_id}) on {image_device}...\n"
+        status_msg += f"Image dimensions: {img_width}x{img_height}\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
         image_load_start = time.time()
         # Load the pipeline without device specification initially
         image_pipe = ov_genai.Text2ImagePipeline(str(config.image_path))
         
         # Reshape the pipeline for the desired dimensions
-        print(f"Reshaping pipeline for {img_width}x{img_height}...")
+        status_msg = f"Reshaping pipeline for {img_width}x{img_height}...\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
+        
         guidance_scale = image_pipe.get_generation_config().guidance_scale
         image_pipe.reshape(1, img_height, img_width, guidance_scale)
         
         # Compile with cache configuration
         image_config = {"CACHE_DIR": str(config.get_cache_dir(image_device))}
-        print(f"Compiling pipeline on {image_device} with cache: {image_config['CACHE_DIR']}")
+        status_msg = f"Compiling pipeline on {image_device} with cache: {image_config['CACHE_DIR']}\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
+        
         compile_start = time.time()
         
         # Compile with split devices (all on same device for simplicity)
@@ -118,15 +144,20 @@ def initialize_models(whisper_device, llm_device, image_device, img_width=1024, 
         compile_end = time.time()
         timing_info['image_compile'] = compile_end - compile_start
         timing_info['image_load_total'] = compile_end - image_load_start
-        print(f"Image compile time: {timing_info['image_compile']:.2f} seconds")
-        print(f"Image total load time: {timing_info['image_load_total']:.2f} seconds")
+        
+        status_msg = f"✓ Image compile time: {timing_info['image_compile']:.2f} seconds\n"
+        status_msg += f"✓ Image total load time: {timing_info['image_load_total']:.2f} seconds\n\n"
+        print(status_msg.strip())
+        status_text += status_msg
+        yield status_text
         
         image_pipe_compiled = True
         current_image_config = {"width": img_width, "height": img_height, "device": image_device}
         
         total_time = timing_info['whisper_load'] + timing_info['llm_load'] + timing_info['image_load_total']
         
-        status = f"""✓ All models initialized successfully!
+        summary = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ All models initialized successfully!
         
 Model Loading Times:
 • Whisper ({config.whisper_hf_id}): {timing_info['whisper_load']:.2f}s on {whisper_device}
@@ -135,11 +166,17 @@ Model Loading Times:
   - Compile time: {timing_info['image_compile']:.2f}s
 • Total initialization time: {total_time:.2f}s
 
-Image pipeline configured for {img_width}x{img_height}"""
+Image pipeline configured for {img_width}x{img_height}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
         
-        return status
+        status_text += summary
+        print("\n" + summary)
+        yield status_text
+        
     except Exception as e:
-        return f"✗ Error initializing models: {str(e)}"
+        error_msg = f"✗ Error initializing models: {str(e)}"
+        print(error_msg)
+        yield error_msg
 
 def process_audio_to_image(audio, whisper_device, llm_device, image_device, 
                           num_steps, guidance_scale, max_tokens, image_size_string):  
@@ -164,9 +201,10 @@ def process_audio_to_image(audio, whisper_device, llm_device, image_device,
     if whisper_pipe is None or llm_pipe is None or image_pipe is None or needs_recompile:
         if needs_recompile and image_pipe is not None:
             print(f"Recompiling image pipeline due to config change...")
-        init_status = initialize_models(whisper_device, llm_device, image_device, img_width, img_height)
-        if "Error" in init_status:
-            return init_status, "", None, ""
+        # Generator will yield status updates
+        for status in initialize_models(whisper_device, llm_device, image_device, img_width, img_height):
+            if "Error" in status:
+                return status, "", None, ""
     
     timing_info = {}
     pipeline_start = time.time()
@@ -196,8 +234,13 @@ def process_audio_to_image(audio, whisper_device, llm_device, image_device,
         
         transcribe_end = time.time()
         timing_info['transcription'] = transcribe_end - transcribe_start
+        
+        transcription_msg = f"Transcription ({timing_info['transcription']:.2f}s):\n{transcribed_text}"
         print(f"Transcription: {transcribed_text}")
         print(f"Transcription time: {timing_info['transcription']:.2f}s")
+        
+        # Yield transcription immediately
+        yield transcription_msg, "", None, ""
         
         # Step 3: Enhance prompt using LLM
         print("Enhancing prompt...")
@@ -215,8 +258,13 @@ Enhanced image prompt:"""
         
         llm_end = time.time()
         timing_info['prompt_enhancement'] = llm_end - llm_start
+        
+        enhancement_msg = f"Prompt Enhancement ({timing_info['prompt_enhancement']:.2f}s):\n{enhanced_prompt}"
         print(f"Enhanced prompt: {enhanced_prompt}")
         print(f"Prompt enhancement time: {timing_info['prompt_enhancement']:.2f}s")
+        
+        # Yield enhanced prompt
+        yield transcription_msg, enhancement_msg, None, ""
         
         # Step 4: Generate image using enhanced prompt with random seed
         print("Generating image...")
@@ -250,52 +298,118 @@ Pipeline Execution:
 • Image Generation: {timing_info['image_generation']:.2f}s ({num_steps} steps)
 • Total Pipeline Time: {timing_info['total_pipeline']:.2f}s
 
-Models:
-• Whisper: {config.whisper_hf_id} on {whisper_device}
-• LLM: {config.llm_hf_id} on {llm_device}
-• Image: {config.image_hf_id} on {image_device}
+Models & Devices:
+• Whisper: {whisper_device}
+• LLM: {llm_device}
+• Image: {image_device}
 
-Image: {img_width}x{img_height}, Steps: {num_steps}, Guidance: {guidance_scale}, Seed: {random_seed}
+Generation Settings:
+• Image: {img_width}x{img_height}
+• Steps: {num_steps}
+• Guidance: {guidance_scale}
+• Seed: {random_seed}"""
         
-Software:
-• OpenVINO: {openvino_version}
-• OpenVINO GenAI: {openvino_genai_version}
-• Platform: {platform.system()} {platform.release()}
-• Python: {platform.python_version()}"""
-        
-        return transcribed_text, enhanced_prompt, generated_image, timing_summary
+        yield transcription_msg, enhancement_msg, generated_image, timing_summary
         
     except Exception as e:
         error_msg = f"Error during processing: {str(e)}"
         print(error_msg)
-        return error_msg, "", None, ""
+        yield error_msg, "", None, ""
 
 def initialize_models_wrapper(whisper_device, llm_device, image_device, image_size_string):
     """Wrapper to parse image size and call initialize_models"""
     img_width, img_height = parse_image_size(image_size_string)
-    return initialize_models(whisper_device, llm_device, image_device, img_width, img_height)
+    # Consume the generator and yield each status update
+    for status in initialize_models(whisper_device, llm_device, image_device, img_width, img_height):
+        yield status
   
 # Create Gradio interface  
 with gr.Blocks(title="Voice-to-Image Generation", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("""
-    # 🎤 Voice-to-Image Generation Pipeline
-    ### Powered by OpenVINO GenAI
-    A multi-stage AI pipeline that converts voice input into generated images using OpenVINO GenAI.
-    
-    **Pipeline Flow:**
-    🎙️ Voice Input → Whisper → LLM Enhancement → Image Generation → 🖼️ Output
-    
-    ### Steps
-    0. **Adjust Model Configuration and Generation Parameters if desired**
-    1. **Initialize Models**:
-    - Click "🚀 Initialize Models" button
-    - Wait for confirmation with loading times displayed
+    # Header row with Introduction and System Info
+    with gr.Row():
+        with gr.Column(scale=2):
+            gr.Markdown("""
+            # Voice-to-Image Generation Pipeline
+            ### Powered by OpenVINO GenAI
+            A multi-stage AI pipeline that converts voice input into generated images using OpenVINO GenAI.
+            
+            **Pipeline Flow:**
+            🎙️ Voice Input → Whisper → LLM Enhancement → Image Generation → 🖼️ Output
+            
+            ### Steps
+            0. **Adjust Model Configuration and Generation Parameters if desired**
+            1. **Initialize Models**:
+            - Click "🚀 Initialize Models" button
+            - Wait for confirmation with loading times displayed
 
-    2. **Generate Images**:
-    - Click `Record` to start recording
-    - Click `Stop` to stop recording
-    - Click "✨ Generate Image" button to generate image from your voice input enhanced by LLM.
-    """)
+            2. **Generate Images**:
+            - Click `Record` to start recording
+            - Click `Stop` to stop recording
+            - Click "✨ Generate Image" button to generate image from your voice input enhanced by LLM.
+            """)
+        
+        with gr.Column(scale=1):
+            # Get hardware info
+            core = ov.Core()
+            available_devices = core.available_devices
+            device_info = []
+            for device in available_devices:
+                try:
+                    device_name = core.get_property(device, "FULL_DEVICE_NAME")
+                    device_info.append(f"• {device}: {device_name}")
+                except:
+                    device_info.append(f"• {device}")
+            
+            devices_str = "  \n".join(device_info) if device_info else "• No devices detected"
+            
+            # Get memory info
+            try:
+                import psutil
+                mem = psutil.virtual_memory()
+                memory_str = f"• Memory: {mem.total / (1024**3):.1f} GB (Available: {mem.available / (1024**3):.1f} GB)"
+            except:
+                memory_str = "• Memory: N/A"
+            
+            # Get OS distribution info
+            os_info = platform.system()
+            if os_info == "Linux":
+                try:
+                    import distro
+                    os_info = f"{distro.name()} {distro.version()}"
+                except:
+                    # Fallback if distro module not available
+                    try:
+                        with open('/etc/os-release') as f:
+                            lines = f.readlines()
+                            for line in lines:
+                                if line.startswith('PRETTY_NAME='):
+                                    os_info = line.split('=')[1].strip().strip('"')
+                                    break
+                    except:
+                        os_info = f"Linux {platform.release()}"
+            elif os_info == "Windows":
+                os_info = f"Windows {platform.release()}"
+            elif os_info == "Darwin":
+                os_info = f"macOS {platform.mac_ver()[0]}"
+            
+            system_info = f"""### 💻 System Information
+
+**Software:**  
+• OpenVINO: {openvino_version}  
+• OpenVINO GenAI: {openvino_genai_version}  
+• Python: {platform.python_version()}  
+• OS: {os_info} ({platform.machine()})
+
+**Hardware:**  
+{memory_str}  
+{devices_str}
+
+**Models:**  
+• Whisper: {config.whisper_hf_id.split('/')[-1]}  
+• LLM: {config.llm_hf_id.split('/')[-1]}  
+• Image: {config.image_hf_id.split('/')[-1]}"""
+            
+            gr.Markdown(system_info)
     
     # Row 1: Model Configuration, Generation Parameters, Initialize & Status
     with gr.Row():
@@ -329,7 +443,7 @@ with gr.Blocks(title="Voice-to-Image Generation", theme=gr.themes.Soft()) as dem
             size_options = get_image_size_options()
             image_size = gr.Dropdown(
                 choices=size_options,
-                value=size_options[1] if len(size_options) > 1 else size_options[0],
+                value=size_options[1],
                 label="Image Size",
                 info="Pre-compiled sizes"
             )
@@ -352,7 +466,7 @@ with gr.Blocks(title="Voice-to-Image Generation", theme=gr.themes.Soft()) as dem
             max_tokens = gr.Slider(
                 minimum=50,
                 maximum=300,
-                value=150,
+                value=100,
                 step=10,
                 label="Max Tokens",
                 info="Prompt enhancement length"
@@ -381,18 +495,18 @@ with gr.Blocks(title="Voice-to-Image Generation", theme=gr.themes.Soft()) as dem
             transcription_output = gr.Textbox(
                 label="🎤 Transcribed Text",
                 placeholder="Your speech will appear here...",
-                lines=3
+                lines=4
             )
             enhanced_prompt_output = gr.Textbox(
                 label="✨ Enhanced Prompt",
                 placeholder="AI-enhanced prompt will appear here...",
-                lines=4
+                lines=5
             )
         
         with gr.Column(scale=1):
             gr.Markdown("### ⏱️ Performance Metrics")
             timing_output = gr.Textbox(
-                label="Timing & System Info",
+                label="Timing & Config Info",
                 placeholder="Performance metrics will appear here...",
                 lines=10
             )
