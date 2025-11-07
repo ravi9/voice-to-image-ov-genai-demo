@@ -74,7 +74,7 @@ This will:
 python voice-to-image-app.py
 ```
 
-[!NOTE] The application will start at: `http://localhost:7860`
+> [!NOTE] The application will start at: `http://localhost:7860`
 
 
 ## Usage
