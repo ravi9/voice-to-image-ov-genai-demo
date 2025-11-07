@@ -68,13 +68,14 @@ This will:
 4. Test each model to ensure it works
 
 
-### Running the Application
+### Launch the Application
 
 ```bash
 python voice-to-image-app.py
 ```
 
-> [!NOTE] The application will start at: `http://localhost:7860`
+> [!NOTE]
+> The application will start at: `http://localhost:7860`
 
 
 ## Usage
@@ -84,85 +85,90 @@ python voice-to-image-app.py
    - Wait for confirmation with loading times displayed
 
 2. **Generate Images**:
-   - Click `Record` to start recording. Example: *"A majestic lion standing on cliff at sunset"*
+   - Click `Record` to start recording. Example: *"A majestic lion standing on a cliff at sunset"*
    - Click `Stop` to stop recording
    - Click "✨ Generate Image" button to generate image from your voice input enhanced by LLM.
 
 ### Sample Output:
-```console
-$ python voice-to-image-app.py 
-======================================================================
-VOICE-TO-IMAGE GENERATION APP
-======================================================================
 
-📊 System Information:
-• Platform: Linux 6.11.0-26-generic
-• Python: 3.12.7
-• OpenVINO: 2025.3.0
-• OpenVINO GenAI: 2025.3.0.0
-
-🔧 Available Hardware:
-• Devices: CPU, GPU, NPU
-  - CPU: Intel(R) Core(TM) Ultra 5 238V
-  - GPU: Intel(R) Arc(TM) Graphics (iGPU)
-  - NPU: Intel(R) AI Boost
-
-📦 Model Configuration:
-• Whisper: OpenVINO/distil-whisper-large-v3-int4-ov
-• LLM: llmware/llama-3.2-3b-instruct-ov
-• Image: rpanchum/lcm-sdxl-ov-fp16-quant_unet
-
-📁 Paths:
-• Config file: /home/ubuntu/projects/voice-to-image-ov-genai-demo/models.config
-• Models directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/models
-• Cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache
-
-✓ Model cache found. Models will load quickly from cache.
-
-======================================================================
-Starting Gradio interface...
-======================================================================
-
-* Running on local URL:  http://0.0.0.0:7860
-* To create a public link, set `share=True` in `launch()`.
-Loading Whisper model (OpenVINO/distil-whisper-large-v3-int4-ov) on NPU...
-Using cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/npucache
-✓ Whisper loaded in 2.45 seconds
-Loading LLM model (llmware/llama-3.2-3b-instruct-ov) on GPU...
-Using cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/gpucache
-✓ LLM loaded in 2.08 seconds
-Loading Image Generation model (rpanchum/lcm-sdxl-ov-fp16-quant_unet) on GPU...
-Image dimensions: 1024x1024
-Reshaping pipeline for 1024x1024...
-Compiling pipeline on GPU with cache: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/gpucache
-✓ Image compile time: 4.79 seconds
-✓ Image total load time: 6.85 seconds
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ All models initialized successfully!
-        
-Model Loading Times:
-• Whisper (OpenVINO/distil-whisper-large-v3-int4-ov): 2.45s on NPU
-• LLM (llmware/llama-3.2-3b-instruct-ov): 2.08s on GPU
-• Image (rpanchum/lcm-sdxl-ov-fp16-quant_unet): 6.85s on GPU
-  - Compile time: 4.79s
-• Total initialization time: 11.38s
-
-Image pipeline configured for 1024x1024
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Transcribing audio...
-Transcription:  A lion looking at the forest.
-Transcription time: 0.67s
-Enhancing prompt...
-Enhanced prompt: Here's a detailed image generation prompt:
-
-"Depict a majestic male lion, with a tawny golden coat and regal mane, gazing out from behind a sprawling canopy of autumnal foliage, with the warm sunlight filtering through the leaves in dappled patterns. The forest floor, carpeted with a soft layer of fallen leaves, stretches out before him like a golden sea, with the trees' trunks rising like sentinels from the earth. In the distance, the misty
-Prompt enhancement time: 2.99s
-Generating image...
-Using random seed: 84
-Image generation time: 3.16s
-Image generation complete!
-```
+<details>
+  <summary>Click to expand Sample Output</summary>
+  ```console
+  
+    $ python voice-to-image-app.py 
+    ======================================================================
+    VOICE-TO-IMAGE GENERATION APP
+    ======================================================================
+    
+    📊 System Information:
+    • Platform: Linux 6.11.0-26-generic
+    • Python: 3.12.7
+    • OpenVINO: 2025.3.0
+    • OpenVINO GenAI: 2025.3.0.0
+    
+    🔧 Available Hardware:
+    • Devices: CPU, GPU, NPU
+      - CPU: Intel(R) Core(TM) Ultra 5 238V
+      - GPU: Intel(R) Arc(TM) Graphics (iGPU)
+      - NPU: Intel(R) AI Boost
+    
+    📦 Model Configuration:
+    • Whisper: OpenVINO/distil-whisper-large-v3-int4-ov
+    • LLM: llmware/llama-3.2-3b-instruct-ov
+    • Image: rpanchum/lcm-sdxl-ov-fp16-quant_unet
+    
+    📁 Paths:
+    • Config file: /home/ubuntu/projects/voice-to-image-ov-genai-demo/models.config
+    • Models directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/models
+    • Cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache
+    
+    ✓ Model cache found. Models will load quickly from cache.
+    
+    ======================================================================
+    Starting Gradio interface...
+    ======================================================================
+    
+    * Running on local URL:  http://0.0.0.0:7860
+    * To create a public link, set `share=True` in `launch()`.
+    Loading Whisper model (OpenVINO/distil-whisper-large-v3-int4-ov) on NPU...
+    Using cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/npucache
+    ✓ Whisper loaded in 2.45 seconds
+    Loading LLM model (llmware/llama-3.2-3b-instruct-ov) on GPU...
+    Using cache directory: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/gpucache
+    ✓ LLM loaded in 2.08 seconds
+    Loading Image Generation model (rpanchum/lcm-sdxl-ov-fp16-quant_unet) on GPU...
+    Image dimensions: 1024x1024
+    Reshaping pipeline for 1024x1024...
+    Compiling pipeline on GPU with cache: /home/ubuntu/projects/voice-to-image-ov-genai-demo/ov-cache/gpucache
+    ✓ Image compile time: 4.79 seconds
+    ✓ Image total load time: 6.85 seconds
+    
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    ✓ All models initialized successfully!
+            
+    Model Loading Times:
+    • Whisper (OpenVINO/distil-whisper-large-v3-int4-ov): 2.45s on NPU
+    • LLM (llmware/llama-3.2-3b-instruct-ov): 2.08s on GPU
+    • Image (rpanchum/lcm-sdxl-ov-fp16-quant_unet): 6.85s on GPU
+      - Compile time: 4.79s
+    • Total initialization time: 11.38s
+    
+    Image pipeline configured for 1024x1024
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    Transcribing audio...
+    Transcription:  A lion looking at the forest.
+    Transcription time: 0.67s
+    Enhancing prompt...
+    Enhanced prompt: Here's a detailed image generation prompt:
+    
+    "Depict a majestic male lion, with a tawny golden coat and regal mane, gazing out from behind a sprawling canopy of autumnal foliage, with the warm sunlight filtering through the leaves in dappled patterns. The forest floor, carpeted with a soft layer of fallen leaves, stretches out before him like a golden sea, with the trees' trunks rising like sentinels from the earth. In the distance, the misty
+    Prompt enhancement time: 2.99s
+    Generating image...
+    Using random seed: 84
+    Image generation time: 3.16s
+    Image generation complete!
+    ```
+</details>
 
 
 ## Advanced Configuration
